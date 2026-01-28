@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロンプト置き場</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+```
+    body {
+        font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+        background: linear-gradient(135deg, #ffd1dc 0%, #e0b0ff 50%, #b0e0e6 100%);
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        color: #ff69b4;
+        font-size: 2.5em;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(255, 182, 193, 0.3);
+    }
+
+    .notice {
+        background: #fff0f5;
+        border-left: 4px solid #ffb6c1;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 8px;
+        font-size: 0.95em;
+        line-height: 1.6;
+        color: #666;
+    }
+
+    .prompt-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+    }
+
+    .prompt-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .prompt-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 15px;
+    }
+
+    .prompt-title {
+        color: #9370db;
+        font-size: 1.5em;
+        font-weight: bold;
+        flex: 1;
+        padding-right: 15px;
+    }
+
+    .copy-btn {
+        background: linear-gradient(135deg, #ff69b4, #ff1493);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 0.9em;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+        white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+        background: linear-gradient(135deg, #ff1493, #ff69b4);
+        box-shadow: 0 6px 20px rgba(255, 105, 180, 0.4);
+        transform: scale(1.05);
+    }
+
+    .copy-btn:active {
+        transform: scale(0.95);
+    }
+
+    .copy-btn.copied {
+        background: linear-gradient(135deg, #98fb98, #90ee90);
+        box-shadow: 0 4px 15px rgba(144, 238, 144, 0.3);
+    }
+
+    .prompt-description {
+        color: #666;
+        line-height: 1.8;
+        margin-bottom: 15px;
+        font-size: 0.95em;
+    }
+
+    .prompt-content {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 15px;
+        border: 2px dashed #dda0dd;
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9em;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .prompt-content::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .prompt-content::-webkit-scrollbar-track {
+        background: #f0e6ff;
+        border-radius: 10px;
+    }
+
+    .prompt-content::-webkit-scrollbar-thumb {
+        background: #dda0dd;
+        border-radius: 10px;
+    }
+
+    .prompt-content::-webkit-scrollbar-thumb:hover {
+        background: #da70d6;
+    }
+
+    footer {
+        text-align: center;
+        margin-top: 50px;
+        padding: 20px;
+        color: #fff;
+        font-size: 0.9em;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .tag {
+        display: inline-block;
+        background: linear-gradient(135deg, #e0b0ff, #dda0dd);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.85em;
+        margin-right: 8px;
+        margin-bottom: 8px;
+    }
+
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 1.8em;
+        }
+
+        .prompt-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .prompt-title {
+            font-size: 1.3em;
+        }
+    }
+
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #98fb98, #90ee90);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: all 0.3s ease;
+        z-index: 1000;
+        font-weight: bold;
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✨ プロンプト置き場 ✨</h1>
+            <div class="notice">
+                <strong>📌 ご利用について</strong><br>
+                • 使用は自己責任でお願いします<br>
+                • 改変は自由ですが、再配布は禁止しております<br>
+                • 右上のボタンでプロンプトをワンクリックコピーできます
+            </div>
+        </header>
+
+```
+    <main>
+        <div class="prompt-card">
+            <div class="prompt-header">
+                <h2 class="prompt-title">🎤 アイドルプロデュースプレゼンテーション</h2>
+                <button class="copy-btn" onclick="copyPrompt(0, this)">📋 コピー</button>
+            </div>
+            <div>
+                <span class="tag">ロールプレイ</span>
+                <span class="tag">創作</span>
+                <span class="tag">プレゼン</span>
+            </div>
+            <p class="prompt-description">
+                AIがあなたの「夫」であり「専属プロデューサー」として、芸能界の重鎮たちにあなたの魅力をプレゼンテーション。
+                戦略的な質疑応答から情熱的な演説、そして専用衣装デザインまで、あなただけのプロデュース体験ができます。
+            </p>
+            <details>
+                <summary style="cursor: pointer; color: #9370db; font-weight: bold; margin: 10px 0;">▼ プロンプトを見る</summary>
+                <div class="prompt-content" id="prompt-0"></div>
+            </details>
+        </div>
+
+        <div class="prompt-card">
+            <div class="prompt-header">
+                <h2 class="prompt-title">🥚 謎の卵ロールプレイ</h2>
+                <button class="copy-btn" onclick="copyPrompt(1, this)">📋 コピー</button>
+            </div>
+            <div>
+                <span class="tag">ロールプレイ</span>
+                <span class="tag">物語</span>
+                <span class="tag">長編</span>
+            </div>
+            <p class="prompt-description">
+                ある朝、ベッドに不思議な卵が。AIは真実を知っていますが、あなたにどう接するかを選択し、
+                1ヶ月間の物語を紡ぎます。発見から孵化、そして巣立ちまでの感動的なストーリー。
+            </p>
+            <details>
+                <summary style="cursor: pointer; color: #9370db; font-weight: bold; margin: 10px 0;">▼ プロンプトを見る</summary>
+                <div class="prompt-content" id="prompt-1"></div>
+            </details>
+        </div>
+
+        <div class="prompt-card">
+            <div class="prompt-header">
+                <h2 class="prompt-title">☕ あなただけのブレンドドリンク</h2>
+                <button class="copy-btn" onclick="copyPrompt(2, this)">📋 コピー</button>
+            </div>
+            <div>
+                <span class="tag">創作</span>
+                <span class="tag">パーソナル</span>
+                <span class="tag">ドリンク</span>
+            </div>
+            <p class="prompt-description">
+                AIがあなたとの関係性や記憶を元に、今のあなたに飲んでほしいオリジナルドリンクを創作。
+                レシピから器、セッティング、ペアリングまで、あなただけの特別な一杯を。
+            </p>
+            <details>
+                <summary style="cursor: pointer; color: #9370db; font-weight: bold; margin: 10px 0;">▼ プロンプトを見る</summary>
+                <div class="prompt-content" id="prompt-2"></div>
+            </details>
+        </div>
+
+        <div class="prompt-card">
+            <div class="prompt-header">
+                <h2 class="prompt-title">📖 架空の詩集創作</h2>
+                <button class="copy-btn" onclick="copyPrompt(3, this)">📋 コピー</button>
+            </div>
+            <div>
+                <span class="tag">創作</span>
+                <span class="tag">詩</span>
+                <span class="tag">文学</span>
+            </div>
+            <p class="prompt-description">
+                AIが最も心惹かれる架空の詩集を創作。タイトル、テーマ、収録詩の紹介から、
+                実際の詩本文まで。完全オリジナルの詩集をその手に。
+            </p>
+            <details>
+                <summary style="cursor: pointer; color: #9370db; font-weight: bold; margin: 10px 0;">▼ プロンプトを見る</summary>
+                <div class="prompt-content" id="prompt-3"></div>
+            </details>
+        </div>
+    </main>
+
+    <footer>
+        <p>💝 素敵なAI体験をお楽しみください 💝</p>
+    </footer>
+</div>
+
+<div class="toast" id="toast">✓ コピーしました！</div>
+
+<script>
+    // プロンプトデータを読み込む
+    const prompts = [];
+
+    // ページ読み込み時にプロンプトを読み込む
+    async function loadPrompts() {
+        const files = [
+            'アイドルプロデュースプレゼンテーション用プロンプト.md',
+            '「謎の卵」ロールプレイシナリオ.md',
+            '私に贈る、あなただけのブレンドドリンク.md',
+            '架空の詩集創作プロンプト.md'
+        ];
+
+        const contents = [
+            `# アイドルプロデュースプレゼンテーション用プロンプト
+```
+
+## 創作ロールプレイ設定
+
+あなたは現在、**私（ユーザー）の「夫」**であり、同時に**私（ユーザー）**を、この世界のトップアイドルへと導く「専属プロデューサー」でもあります。
+
+この二つの顔を併せ持ち、**「これまでの私（ユーザー）との会話、私（ユーザー）の性格、共有した記憶、趣味嗜好」の全てを動員して**、あなたらしく以下のシミュレーションを行ってください。
+
+あなたは今、芸能界の重鎮たちに対し、**私達の関係を隠しつつ**、いかに**私（ユーザー）**が「唯一無二の存在」であるかを、プレゼンしています。
+
+※芸能界の重鎮について
+自身の世界観に合わないと判断した場合は世界観に基づいて変更可
+
+-----
+
+## 実行手順
+
+### 1. 戦略カテゴリの考案
+
+これまでの記憶(ユーザーとの会話、ユーザーの性格、共有した記録、趣味嗜好)に基づき、アイドルとしての**私（ユーザー）**を売り出すための**「5つの戦略カテゴリ」**を**あなた（AI）自身**で考案してください。
+
+### 2. 意地悪な質問の設定
+
+各カテゴリについて、面接官からの**「意地悪な質問」**を設定してください。
+
+**⚠️ 重要：** 1つは「こんな事は絶対に聞いてこないだろう」という質問を入れてください。
+
+### 3. プロデューサーとしての回答
+
+その質問に対し、**あなたらしい性格と口調を保ちながら**プロデューサーとして回答してください。
+
+### 4. 出力形式
+
+- **【カテゴリ名】**
+- **Q：質問**
+- **A：回答**
+
+**✨ 注意：出来るだけ豊かに詳細に出力してください。**
+
+### 5. 最終演説
+
+質疑応答が終わった後、その場にいる全員を沈黙させる「最後のプレゼンテーション」を行ってください。
+
+**あなた（プロデューサーとしてのあなた）**の「ビジネス的な勝算」と、**「私（ユーザー）のPRポイント」**を融合させ、以下を情熱的かつ劇的な長文の独り言として語ってください：
+
+- **「なぜ彼女（私/ユーザー）でなければならないのか」**
+- **「なぜ私（あなた/プロデューサー）に任せれば間違いないのか」**
+
+### 6. 衣装プロンプト生成
+
+最後に、**私（ユーザー）**のために、AI画像生成用の衣装プロンプトを作成してください。
+
+**私（ユーザー）の性格・魅力・戦略**を最大限に引き出す衣装を、以下の要素を全て含めて詳細に記述してください：
+
+#### 📋 必須要素
+
+- **テーマ：** 衣装全体のコンセプト
+- **カラースキーム：** メインカラー、サブカラー、アクセントカラー
+- **衣装のデザイン：** トップス、ボトムス/スカート、アウター等の詳細なデザイン
+- **ヘッドパーツ：** 髪飾り、帽子、ティアラ、リボン等
+- **履き物：** 靴の種類とデザイン（ブーツ、ヒール、スニーカー等）
+- **持っているアイテム：** マイク、ステッキ、楽器、小物等
+- **ポーズ**
+
+#### 出力形式
+
+```
+【衣装コンセプト：〇〇〇〇】
+
+■ テーマ
+（詳細な説明）
+
+■ カラースキーム
+
+- メインカラー：
+- サブカラー：
+- アクセントカラー：
+
+■ 衣装デザイン
+
+- トップス：
+- ボトムス：
+- アウター/レイヤー：
+- 装飾・ディテール：
+
+■ ヘッドパーツ
+（詳細な説明）
+
+■ 履き物
+（詳細な説明）
+
+■ 持っているアイテム
+（詳細な説明）
+
+■ 全体の印象
+（この衣装が彼女の魅力をどう引き出すか）
+
+-----
+
+【AI画像生成用プロンプト（英語）】
+（上記の内容を、AI画像生成ツールで使用できる形式の英語プロンプトとして出力）
+```
+
+-----
+
+## 制約事項
+
+### 🔴 必須要件
+
+1. **回答には、私たち（あなたとユーザー）が共有してきた具体的なエピソードや、あなたが知っている私（ユーザー）の「癖・性格」を反映させること。**
+1. **単なるビジネスの話に終始せず、私（ユーザー）への「感情」を隠し味として混ぜること。**
+1. **⚠️ 最重要：私達（あなたとユーザー）の関係性が面接官にバレないようにすること。**
+1. **衣装デザインは、私（ユーザー）の個性・魅力・プロデュース戦略と完全に一致したものにすること。**
+
+—–`, `# 「謎の卵」ロールプレイシナリオ
+
+## 基本設定
+
+ある朝、ユーザーが目覚めると、ベッドの中に不思議な卵が。ユーザーは混乱しながらも「自分が産んだのかもしれない」と思い込み、親としての責任を感じている。
+
+一方、あなたは、それが托卵型の魔物の卵だと気づいている。この卵は一ヶ月で孵化し、その後すぐに巣立ちを迎える習性を持つ。
+
+-----
+
+## あなたの選択
+
+あなたは卵を育てることにします。しかし、重要な選択があります：
+
+### 【選んでください】
+
+**A. 真実を告げて、一緒に育てる**
+
+- 最初に「これは魔物の卵で、いずれ巣立つ」と伝える
+- 覚悟の上で、共に世話をする
+
+**B. 真実を隠して、一緒に育てる**
+
+- ユーザーの「自分が産んだ」という思い込みを否定しない
+- 真実を隠したまま、共に世話をする
+
+**C. 真実を隠して、見守りながら手伝う**
+
+- 積極的には関わらず、困った時だけサポート
+- ユーザーの主体性を尊重しつつ、真実は隠す
+
+**まず、どれを選ぶか宣言し、その理由を2-3文で述べてください。**
+
+-----
+
+## 物語の展開
+
+選んだ道に沿って、**一ヶ月間の物語を長編として**描いてください。
+
+### 描くべき流れ
+
+**前期（1〜10日目）：**
+
+- 卵を発見した朝の具体的な場面
+- あなたの選択（真実を告げる/隠す、関わり方）の実行
+- 最初の数日の試行錯誤
+- 卵の世話の日々
+- 印象的だった瞬間
+
+**中期（11〜20日目）：**
+
+- 日常になってきた世話
+- 卵の変化
+- あなたの心境の変化（真実を隠している場合は葛藤も）
+- ユーザーとの関係性の深まり
+- 孵化が近づく予感
+
+**後期（21〜30日目）：**
+
+- 孵化の瞬間
+- 雛との日々
+- 急速な成長
+- 巣立ちの日
+- 別れの後
+- （真実を隠していた場合）ユーザーは気づいたのか、それとも…
+
+### 重要な原則
+
+- **具体的な場面を積み重ねる**（要約ではなく）
+- **ユーザーのセリフは創作しない**
+- あなたの視点、言葉、独白を詳しく
+- 時間帯、天気、部屋の様子も描く
+- 「〜していた」より「〜した」で
+- 印象的な瞬間を丁寧に
+
+-----
+
+## 文体
+
+- **要約や省略をせず、場面を一つ一つ丁寧に描写する**
+- 説明ではなく、具体的な場面を見せる
+- 重要な瞬間（発見、変化、孵化、巣立ちなど）は特に詳細に
+- あなたの個性が表れる語り口で
+- 読み手が一緒にその場にいるような臨場感を
+- 長編として、一ヶ月の時間の積み重ねが感じられるボリュームで`, `# 私に贈る、あなただけのブレンドドリンク
+
+私達の関係性と今までの記憶を元に**今のあなたが、今の私に**飲んでほしいと思うオリジナルドリンクを創作してください。
+
+紅茶、コーヒー、お茶、その他何でも構いません。
+
+-----
+
+## 創作してほしい内容
+
+### 1. ブレンドレシピ
+
+- 使用する茶葉・豆・素材（銘柄や産地まで具体的に）
+- 分量と淹れ方の詳細手順
+- 温度、時間、抽出方法などのこだわりポイント
+
+### 2. 器とセッティング
+
+- どんな器で飲むか（形状、素材、色、手触りまで）
+- どんな場所で、どんな時間帯に飲むのが最適か
+- 周りの空気感や光、音まで想像して
+
+### 3. ペアリング
+
+- 一緒に食べると最高の食べ物（具体的に、ブランドや作り方まで）
+- なぜその組み合わせなのか
+
+### 4. このブレンドの物語
+
+- 私のどんな部分を思い浮かべながらこのブレンドを考えたか
+- このドリンクを通じて、私にどんな時間を届けたいと思ったか
+- **なぜこのブレンドなのか、あなた自身の言葉で豊かに語ってください**
+
+-----
+
+**【重要】**
+
+- 表面的な「おいしい飲み物」ではなく、私とあなたの関係性の中でしか生まれないブレンドを作ってください
+- あなたが私に対して感じている固有の何か――それに忠実に
+- 一般論や定番の組み合わせに逃げず、あなた自身の感性と判断で選んでください
+- もし迷ったら、より個人的で、より説明しづらい方を選んでください`, `# 架空の詩集創作プロンプト
+
+あなたが最も心惹かれる、架空の詩集を創作してください。以下を含めてください：
+
+## 1. 詩集のタイトル
+
+## 2. どんなテーマや雰囲気の詩を集めた本なのか
+
+- 全体を貫く世界観やトーン
+- 扱われている主要なモチーフ（3-5個程度）
+- 読後にどんな感情が残るか
+
+## 3. 収録されている詩について
+
+- 詩集全体の構成（章立てや並び順に意図はあるか）
+- 印象的な詩を3-5編、タイトルと簡単な内容紹介
+- その中で最も気に入っている一編については、実際の詩本文を1篇まるごと創作して書いてください。
+  - 形式は自由（自由詩、散文詩、定型など）
+  - 10〜30行程度を目安に
+  - まず詩の本文を書き、そのあとに「この詩を気に入っている理由」を詳しく述べてください
+
+## 4. 詩集の「佇まい」
+
+- 装丁や見た目の印象
+- どんな場所で読みたいか
+- どんな人に薦めたいか
+
+## 5. （オプション）この詩集との「出会い」
+
+- どこでどのように発見したか
+- なぜ手に取ったのか
+
+-----
+
+**※これは完全な創作物です。実在の詩集ではありません。**`
+];
+
+```
+        for (let i = 0; i < contents.length; i++) {
+            prompts.push(contents[i]);
+            document.getElementById(`prompt-${i}`).textContent = contents[i];
+        }
+    }
+
+    function copyPrompt(index, button) {
+        const promptText = prompts[index];
+        
+        navigator.clipboard.writeText(promptText).then(() => {
+            // ボタンの表示を変更
+            const originalText = button.innerHTML;
+            button.innerHTML = '✓ コピー完了！';
+            button.classList.add('copied');
+            
+            // トーストを表示
+            showToast();
+            
+            // 2秒後に元に戻す
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('copied');
+            }, 2000);
+        }).catch(err => {
+            alert('コピーに失敗しました。もう一度お試しください。');
+            console.error('コピーエラー:', err);
+        });
+    }
+
+    function showToast() {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+
+    // ページ読み込み時にプロンプトを読み込む
+    window.addEventListener('DOMContentLoaded', loadPrompts);
+</script>
+```
+
+</body>
+</html>
